@@ -1,0 +1,86 @@
+﻿
+@{
+    ViewBag.Title = "Hantera certifikat";
+}
+
+<h2>Hantera certifikat</h2>
+
+<p>För att kommunicera med GetSwish AB´s API för Swish för handel krävs det ett registrerat certifikat hos GetSwish AB och detta ska vi försöka med denna guide att berätta hur du gör om du sitter i Windows.</p>
+
+<h3>Installera Open SSL på Windows</h3>
+
+<p>Gå till <a href="https://slproweb.com/products/Win32OpenSSL.html" target="_blank">https://slproweb.com/products/Win32OpenSSL.html</a>, på den sidan hittar du en tabell med titlen <strong>"Download Win32 OpenSSL"</strong> och klicka på första länken i tabellen "Win32 OpenSSL vX.X.XX Light" och ladda ner filen och installera.</p>
+
+<p>Öppna ett kommandofönster i katalogen för OpenSSL (default): c:\OpenSSL-Win32\bin</p>
+
+<h3>Skapa en Certificate Signing Request (CSR)</h3>
+
+<p>Det behövs en CSR med privat nyckel för att skapa ett certifikat för Swish Handel.</p>
+
+<h4>Skapa en privat nyckel</h4>
+
+<p>Skriv raden nedan och tryck enter:</p>
+
+<pre>openssl.exe genrsa -out mysite.key 2048</pre>
+
+<h4>Skapa en CSR</h4>
+
+<p>Skriv raden nedan och tryck enter och fyll i uppgifterna som behövs, se nedanf vad jag fyllt i:</p>
+
+<pre
+    >openssl.exe req -new -key mysite.key -out mysite.csr -config openssl.cfg
+
+    Country Name (2 letter code) [AU]: SE 
+    State or Province Name (full name) [Some-State]: Nyköping 
+    Locality Name (eg, city) []: Nyköping 
+    Organization Name (eg, company) [Internet Widgits Pty Ltd]: IT 
+    Organizational Unit Name (eg, section) []: IT 
+    Common Name (e.g. server FQDN or YOUR name) []: www.somedomain.se 
+    Email Address []: info@somedomain.se 
+    A challenge password []: swish 
+    An optional company name []:
+</pre>
+
+<h3>Ladda upp CSR till Swish/Bankgirot</h3>
+
+<p>Starta en webbläsare och surfa till: <a href="https://getswishcert.bankgirot.se" target="_blank">https://getswishcert.bankgirot.se</a></p>
+
+<p>För att logga in krävs ett avtal för Swish Handel samt Bank-ID.</p>
+
+<p>Fyll i Personal number, Organisation number samt Swish number och logga in med Continue.</p>
+
+<h4>Ladda up och få fram publika nyckeln av Swish</h4>
+
+<ul>
+    <li>Klicka på fliken New Certificate</li>
+    <li>Klistra in CSR i fältet Paste CSR</li>
+    <li>Markera PEM</li>
+    <li>Välj BIC (i regel finns endast ett val)</li>
+    <li>Klicka på Generate</li>
+</ul>
+
+<h4>Spara publika nyckeln du fått av Swish</h4>
+<ul>
+    <li>Öppna Notepad/Anteckingar</li>
+    <li>
+        Det är mycket text i textrutan (totalt fyra certifikat). Allt måste kopieras. Kopiera så här: Ställ markören i textrutan och markera allt med CTRL+A, kopiera allt med CTRL+C, klistra in allt i Notepad (som måste vara tom) med CTRL+V.
+    </li>
+    <li>
+        Spara till sist texten i Notepad med filnamnet ”mysite-swish.pem” (Obs, för att filnamnet ska bli korrekt i Notepad behövs citationstecknen runt filnamnet.)
+    </li>
+    <li>
+        Stäng Notepad
+    </li>
+</ul>
+
+<p>Det är kort timeout på Swish sida för certifikat. Om utloggning sker är det bara att logga in igen och välja Download i listan över certifikat för att få fram textrutan ovan igen.</p>
+
+<h3>Skapa en PFX-fil</h3>
+
+<p>Med hjälp av mysite-swish.pem, mysite.key samt lösenordet (swish) kan en PFX-fil skapas, skriv kommandot nedan i din Kommandotolk fönster och det genereras en .PFX fil i samma mapp:</p>
+
+<pre>openssl pkcs12 -export -out mysite.pfx -inkey mysite.key -in mysite-swish.pem</pre>
+
+<h3>Använda certifikatet</h3>
+
+<p>Guiden ovan är generell för hur du hanterar certifikaten med GetSwish AB i Windows, hur du nu använder certifikatet beror nu helt och hållet på hur du gör anropen mot GetSwish AB´s API men om du vill använda koden som detta projekt/sida använder så <a href="/Produktion/">klicka här</a>.</p>

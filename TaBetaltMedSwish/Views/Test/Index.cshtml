@@ -1,0 +1,30 @@
+﻿
+@{
+    ViewBag.Title = "Testa Swish för handel";
+}
+
+<h2>@ViewBag.Title</h2>
+
+<p>Fyll i nedan stående formulär med dina egna värden. Koden använder satta värden i web.config filen i projektet för att göra anropet mot test eller produktions miljö.</p>
+
+
+
+<form action="/Test/Swish" method="post">
+    <div class="form-group">
+        <label for="inputReference">Köp referens, tex ett ordernummer</label>
+        <input type="text" class="form-control" id="inputReference" name="inputReference" value="123456789" />
+    </div>
+    <div class="form-group">
+        <label for="inputBuyerNumber">Betalarens mobilnummer</label>
+        <input type="text" class="form-control" id="inputBuyerNumber" name="inputBuyerNumber" value="46731596605" />
+    </div>
+    <div class="form-group">
+        <label for="inputAmountr">Summa</label>
+        <input type="number" class="form-control" id="inputAmountr" name="inputAmountr" value="1" />
+    </div>
+    <div class="form-group">
+        <label for="inputMessage">Meddelande</label>
+        <input type="text" class="form-control" id="inputMessage" name="inputMessage" value="Test" />
+    </div>
+    <button type="submit" class="btn btn-default">Testa</button>
+</form>

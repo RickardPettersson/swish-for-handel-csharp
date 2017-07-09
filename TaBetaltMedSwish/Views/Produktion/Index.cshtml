@@ -1,0 +1,35 @@
+﻿
+@{
+    ViewBag.Title = "Kör i produktion";
+}
+
+<h2>Kör i produktion</h2>
+
+<p>Vill du nu köra Swish för handel i produktions miljön med ditt egna avtal så är det ett antal steg du behöver följa:</p>
+
+<ul>
+    <li>Kopiera din .PFX-fil till App_Data mappen i rooten av projektet</li>
+    <li>Öppna web.config filen och ändra applikationsinställningarna:
+    <ul>
+        <li>test_mode - Ändra till false = inte i testläge</li>
+        <li>production_certificateFileName - Ändra vad din certifikat fil heter</li>
+        <li>production_paymentRequestURL - Ändra inte om du inte är säker på att GetSwish AB har ändrat URL till sin produiktions miljö</li>
+        <li>production_certificatePassword - Ändra till certifikatets lösenord</li>
+        <li>production_payeeAlias - Ändra till ditt swish nummer som du fått vid avtalet med din bank</li>
+        <li>production_callbackURL - Ändra till din URL vart Callbacken kommer göras från Swish</li>
+    </ul>
+    </li>
+</ul>
+
+<p>I och med dessa ändringar ovan så bör du kunna köra projektet/sidan och det bör göras en riktig betalning som du får bekräfta i din Swish app.</p>
+
+<p>Fungerar allt så har du i och med detta hjälp funktioner i detta projekt som du nu kan kopiera och implementera i ditt egna projekt där du vill låta kunder betala med Swish för handel.</p>
+
+<h3>Några tips & trix för produktion</h3>
+
+<ul>
+    <li>Från GetSwish AB får man en .p12 fil för test miljön och detta projekt använder .pfx fil i produktion. Båda två formaten innehåller en eller flera certifikat och fungerar på samma sätt men det verkar som Microsoft föredrar .pfx filer så därför har vi skrivit om .pfx fil men .p12 fil fungerar lika bra som ni ser om ni testar med .p12 certifikatet bifogat i projektet.</li>
+    <li>Callback metoderna fungerar endast över HTTPS så mitt tips är att lägga upp så fort som möjligt någonstans ett projekt som kan ta emot callback på en publik URL, vill du debuga det måste du öppna upp din dev webserver och ha ett SSL certifikat för att det ska fungera.</li>
+    <li>När man väl kör hjälp klasserna i en produktions miljö lär man vilja hantera fel mycket bättre, jag har kommenterat vart felhanteringen borde vara och det finns i GetSwish AB API dokumentation vad för typer av fel varje anrop kan få.</li>
+    <li>Om man får att projektet inte hittar certifikatetets sökväg så behöver man på IIS Applications Poolen under Avancerade inställningar sätta att "Load User Profile" ska vara true istället för false.</li>
+</ul>
