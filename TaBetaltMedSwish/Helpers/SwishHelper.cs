@@ -22,42 +22,6 @@ namespace TaBetaltMedSwish.Helpers
         private static Logger logger = LogManager.GetCurrentClassLogger();
 
         /// <summary>
-        /// Denna metod gör en betalnings förfrågan med hjälp av ett certifikat i en fil
-        /// </summary>
-        /// <param name="phonenumber"></param>
-        /// <param name="amount"></param>
-        /// <param name="message"></param>
-        /// <param name="callbackUrl"></param>
-        /// <param name="certificatePath"></param>
-        /// <param name="certificatePassword"></param>
-        /// <param name="URL"></param>
-        /// <param name="payeePaymentReference"></param>
-        /// <param name="payeeAlias"></param>
-        /// <returns></returns>
-        public static SwishPaymentRequestResponse PaymentRequestWithFile(string phonenumber, int amount, string message, string callbackUrl, string certificatePath, string certificatePassword, string URL = "https://mss.swicpc.bankgirot.se/swish-cpcapi/api/v1/paymentrequests/", string payeePaymentReference = "0123456789", string payeeAlias = "1231181189")
-        {
-            try
-            {
-                // Läs in certifikat filen som en byte array
-                byte[] certDataBytes = System.IO.File.ReadAllBytes(certificatePath);
-
-                // Använd byte arrayen och gör betalnings förfrågan
-                return PaymentRequestWithByteArray(phonenumber, amount, message, callbackUrl, certDataBytes, certificatePassword, URL, payeePaymentReference, payeeAlias);
-            }
-            catch (Exception ex)
-            {
-                logger.Error("PaymentRequestWithFile > Exception > phonenumber: " + phonenumber + " - amount: " + amount + " - message: \"" + message + "\" - callbackUrl: \"" + callbackUrl + "\" - certificatePath: \"" + certificatePath + "\" - certificatePassword:: \"" + certificatePassword + "\" - URL: \"" + URL + "\" - payeePaymentReference: \"" + payeePaymentReference + "\" - payeeAlias: " + payeeAlias + " - Exception: " + ex.ToString());
-
-                return new SwishPaymentRequestResponse()
-                {
-                    Location = "",
-                    PaymentRequestToken = "",
-                    Error = "Exception: " + ex.ToString()
-                };
-            }
-        }
-
-        /// <summary>
         /// Denna metod gör en betalnings förfrågan med hjälp av ett certifikat i en byte array
         /// </summary>
         /// <param name="phonenumber"></param>
@@ -70,7 +34,7 @@ namespace TaBetaltMedSwish.Helpers
         /// <param name="payeePaymentReference"></param>
         /// <param name="payeeAlias"></param>
         /// <returns></returns>
-        public static SwishPaymentRequestResponse PaymentRequestWithByteArray(string phonenumber, int amount, string message, string callbackUrl, byte[] certificateData, string certificatePassword, string URL = "https://mss.swicpc.bankgirot.se/swish-cpcapi/api/v1/paymentrequests/", string payeePaymentReference = "0123456789", string payeeAlias = "1231181189")
+        public static SwishPaymentRequestResponse PaymentRequestWithByteArray(string phonenumber, int amount, string message, string callbackUrl, byte[] certificateData, string certificatePassword, string URL = "https://mss.cpc.getswish.net/swish-cpcapi/api/v1/paymentrequests/", string payeePaymentReference = "0123456789", string payeeAlias = "1231181189")
         {
             try
             {
@@ -495,41 +459,53 @@ namespace TaBetaltMedSwish.Helpers
         /// <param name="clientCertData"></param>
         /// <param name="clientCertPass"></param>
         /// <returns></returns>
-        private static HttpWebRequest CreateSwishRequest(String url, byte[] clientCertData, String clientCertPass)
+        private static HttpWebRequest CreateSwishRequest(string url, byte[] clientCertData, string clientCertPass)
         {
-            //Basic set up 
-            ServicePointManager.CheckCertificateRevocationList = false;
+            X509Certificate2Collection certificates = new X509Certificate2Collection();
+            certificates.Import(clientCertData, clientCertPass, X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet);
 
-            //Tls12 does not work 
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls11;
-
-            //Load client certificates 
-            var clientCerts = new X509Certificate2Collection();
-
-            clientCerts.Import(clientCertData, clientCertPass ?? "", X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet);
-
-            //Assert CA certs in cert store, and get root CA 
-            X509Certificate2 rootCertificate = AssertCertsInStore(clientCerts);
-
-            var req = HttpWebRequest.Create(url) as HttpWebRequest;
-
-            req.ClientCertificates = clientCerts;
+            ServicePointManager.ServerCertificateValidationCallback = (a, b, c, d) => true;
+            HttpWebRequest req = (HttpWebRequest)WebRequest.Create(url);
+            req.AllowAutoRedirect = true;
+            req.ClientCertificates = certificates;
             req.Method = "POST";
             req.ContentType = "application/json; charset=UTF-8";
-            req.AllowAutoRedirect = false;
-
-            //Verify server root CA by comparing to client cert root CA 
-            req.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) =>
-            {
-                var chainRootCa = chain?.ChainElements?.OfType<X509ChainElement>().LastOrDefault()?.Certificate;
-
-                if (rootCertificate == null || chainRootCa == null) return false;
-
-                return rootCertificate.Equals(chainRootCa);
-                //Same root CA as client cert 
-            };
 
             return req;
+
+            ////Basic set up 
+            //ServicePointManager.CheckCertificateRevocationList = false;
+
+            ////Tls12 does not work 
+            //ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls11;
+
+            ////Load client certificates 
+            //var clientCerts = new X509Certificate2Collection();
+
+            //clientCerts.Import(clientCertData, clientCertPass ?? "", X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet);
+
+            ////Assert CA certs in cert store, and get root CA 
+            //X509Certificate2 rootCertificate = AssertCertsInStore(clientCerts);
+
+            //var req = HttpWebRequest.Create(url) as HttpWebRequest;
+
+            //req.ClientCertificates = clientCerts;
+            //req.Method = "POST";
+            //req.ContentType = "application/json; charset=UTF-8";
+            //req.AllowAutoRedirect = false;
+
+            ////Verify server root CA by comparing to client cert root CA 
+            //req.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) =>
+            //{
+            //    var chainRootCa = chain?.ChainElements?.OfType<X509ChainElement>().LastOrDefault()?.Certificate;
+
+            //    if (rootCertificate == null || chainRootCa == null) return false;
+
+            //    return rootCertificate.Equals(chainRootCa);
+            //    //Same root CA as client cert 
+            //};
+
+            //return req;
         }
 
         /// <summary>
