@@ -9,6 +9,8 @@ Om man laddar ner koden så är det förinställt att bara fungera och köra mot
 
 Däremot är projektet förberett så du kan lägga in ditt egna produktions miljö certifikat och uppgifter i web.config och köra projektet i deras produktionsmiljö.
 
+Uppdatering 2019-05-26 - Har nu uppdaterat test certifikatet och fått koden att fungera att köra en "PaymentRequest" och en "PaymentStatusCheck" mote senaste Swish Test API:et
+
 Projektet i dettta repository finns som en öppen website på http://www.tabetaltmedswish.se där ni kan läsa mera om detta projekt och hur ni får allt att fungera i produktionsmiljö.
 
 Jag som gjort detta projekt heter Rickard Nordström Pettersson och ni hittar mina kontaktuppgifter på http://www.rickardp.se
