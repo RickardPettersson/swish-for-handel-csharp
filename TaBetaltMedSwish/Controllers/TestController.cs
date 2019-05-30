@@ -29,13 +29,12 @@ namespace TaBetaltMedSwish.Controllers
             Helpers.VisitorLogHelper.Log();
 
             // Input data från forumlär
-            string payeePaymentReference = f["inputReference"];
             string buyerNumber = f["inputBuyerNumber"];
             int amount = Convert.ToInt32(f["inputAmountr"]);
             string message = f["inputMessage"];
 
             // Objekt att hålla resultetat efter en swish betlanings förfrågan
-            SwishPaymentRequestResponse result = null;
+            SwishApi.Models.PaymentRequestECommerceResponse result = null;
 
             // Kontrollera om web.config är satt att vara i test läge
             if (Config.TestMode)
@@ -43,22 +42,22 @@ namespace TaBetaltMedSwish.Controllers
                 // Hämta sökvägen till certifikatet
                 string certificatePath = HostingEnvironment.MapPath(@"~/App_Data/" + Config.Test.CertificateFileName);
 
-                // Läs in certifikat filen som en byte array, detta är endast för att visa att funktionen nedan kan ta en byte array som skulle kunna hämtats från en databas
-                byte[] certDataBytes = System.IO.File.ReadAllBytes(certificatePath);
+                // Create a SwishApi Client object
+                SwishApi.Client client = new SwishApi.Client(certificatePath, Config.Test.CertificatePassword, Config.Test.CallbackURL);
 
-                // Gör en Swish betalnings förfrågan med certifikatet som en byte array
-                result = Helpers.SwishHelper.PaymentRequestWithByteArray(buyerNumber, amount, message, Config.Test.CallbackURL, certDataBytes, Config.Test.CertificatePassword, Config.Test.PaymentRequestURL, payeePaymentReference, Config.Test.PayeeAlias);
+                // Make the payment request
+                result = client.MakePaymentRequest(buyerNumber, amount, message);
             }
             else
             {
                 // Hämta sökvägen till certifikatet
                 string certificatePath = HostingEnvironment.MapPath(@"~/App_Data/" + Config.Production.CertificateFileName);
 
-                // Läs in certifikat filen som en byte array, detta är endast för att visa att funktionen nedan kan ta en byte array som skulle kunna hämtats från en databas
-                byte[] certDataBytes = System.IO.File.ReadAllBytes(certificatePath);
+                // Create a SwishApi Client object
+                SwishApi.Client client = new SwishApi.Client(certificatePath, Config.Production.CertificatePassword, Config.Production.CallbackURL, Config.Production.PayeePaymentReference, Config.Production.PayeeAlias);
 
-                // Gör en Swish betalnings förfrågan med certifikatet som en byte array
-                result = Helpers.SwishHelper.PaymentRequestWithByteArray(buyerNumber, amount, message, Config.Production.CallbackURL, certDataBytes, Config.Production.CertificatePassword, Config.Production.PaymentRequestURL, payeePaymentReference, Config.Production.PayeeAlias);
+                // Make the payment request
+                result = client.MakePaymentRequest(buyerNumber, amount, message);
             }
 
             ViewBag.result = result;
@@ -71,7 +70,7 @@ namespace TaBetaltMedSwish.Controllers
         {
             Helpers.VisitorLogHelper.Log();
 
-            SwishCheckPaymentRequestStatusResponse result = null;
+            SwishApi.Models.CheckPaymentRequestStatusResponse result = null;
 
             // Kontrollera om web.config är satt att vara i test läge
             if (Config.TestMode)
@@ -79,22 +78,22 @@ namespace TaBetaltMedSwish.Controllers
                 // Hämta sökvägen till certifikatet
                 string certificatePath = HostingEnvironment.MapPath(@"~/App_Data/" + Config.Test.CertificateFileName);
 
-                // Läs in certifikat filen som en byte array, detta är endast för att visa att funktionen nedan kan ta en byte array som skulle kunna hämtats från en databas
-                byte[] certDataBytes = System.IO.File.ReadAllBytes(certificatePath);
+                // Create a SwishApi Client object
+                SwishApi.Client client = new SwishApi.Client(certificatePath, Config.Test.CertificatePassword, Config.Test.CallbackURL);
 
                 // Kontrollera betalnings status med hjälp av certifikatet som en byte array
-                result = Helpers.SwishHelper.CheckPaymentRequestStatusWithByteArray(statusUrl, certDataBytes, Config.Test.CertificatePassword);
+                result = client.CheckPaymentStatus(statusUrl);
             }
             else
             {
                 // Hämta sökvägen till certifikatet
                 string certificatePath = HostingEnvironment.MapPath(@"~/App_Data/" + Config.Production.CertificateFileName);
 
-                // Läs in certifikat filen som en byte array, detta är endast för att visa att funktionen nedan kan ta en byte array som skulle kunna hämtats från en databas
-                byte[] certDataBytes = System.IO.File.ReadAllBytes(certificatePath);
+                // Create a SwishApi Client object
+                SwishApi.Client client = new SwishApi.Client(certificatePath, Config.Production.CertificatePassword, Config.Production.CallbackURL, Config.Production.PayeePaymentReference, Config.Production.PayeeAlias);
 
                 // Kontrollera betalnings status med hjälp av certifikatet som en byte array
-                result = Helpers.SwishHelper.CheckPaymentRequestStatusWithByteArray(statusUrl, certDataBytes, Config.Production.CertificatePassword);
+                result = client.CheckPaymentStatus(statusUrl);
             }
 
             // When someone like to use this live i should log this and maybe change the status of some order or somethign to be paid or what the status says.
@@ -115,7 +114,7 @@ namespace TaBetaltMedSwish.Controllers
         {
             Helpers.VisitorLogHelper.Log();
 
-            string result = string.Empty;
+            SwishApi.Models.RefundResponse result;
 
             // Kontrollera om web.config är satt att vara i test läge
             if (Config.TestMode)
@@ -123,27 +122,25 @@ namespace TaBetaltMedSwish.Controllers
                 // Hämta sökvägen till certifikatet
                 string certificatePath = HostingEnvironment.MapPath(@"~/App_Data/" + Config.Test.CertificateFileName);
 
-                // Läs in certifikat filen som en byte array, detta är endast för att visa att funktionen nedan kan ta en byte array som skulle kunna hämtats från en databas
-                byte[] certDataBytes = System.IO.File.ReadAllBytes(certificatePath);
+                // Create a SwishApi Client object
+                SwishApi.Client client = new SwishApi.Client(certificatePath, Config.Test.CertificatePassword, Config.Test.CallbackURL);
 
                 // Kontrollera betalnings status med hjälp av certifikatet som en byte array
                 // "Återköp" strängen är meddelandet användaren ser vid återbetalning i Swish appen, här bör man kankse i en produktionsmiljö skicka med mer detaljer
-                result = SwishHelper.PaymentRefundWithWithByteArray(p, id, a, "Återköp", Config.Test.RefundCallbackURL, certDataBytes, Config.Test.CertificatePassword, Config.Test.PaymentRefundURL, Config.Test.PayeeAlias);
+                result = client.Refund(id, (double)a, "Återköp", Config.Test.RefundCallbackURL);
             }
             else
             {
                 // Hämta sökvägen till certifikatet
                 string certificatePath = HostingEnvironment.MapPath(@"~/App_Data/" + Config.Production.CertificateFileName);
 
-                // Läs in certifikat filen som en byte array, detta är endast för att visa att funktionen nedan kan ta en byte array som skulle kunna hämtats från en databas
-                byte[] certDataBytes = System.IO.File.ReadAllBytes(certificatePath);
+                // Create a SwishApi Client object
+                SwishApi.Client client = new SwishApi.Client(certificatePath, Config.Production.CertificatePassword, Config.Production.CallbackURL, Config.Production.PayeePaymentReference, Config.Production.PayeeAlias);
 
                 // Kontrollera betalnings status med hjälp av certifikatet som en byte array
                 // "Återköp" strängen är meddelandet användaren ser vid återbetalning i Swish appen, här bör man kankse i en produktionsmiljö skicka med mer detaljer
-                result = SwishHelper.PaymentRefundWithWithByteArray(p, id, a, "Återköp", Config.Production.RefundCallbackURL, certDataBytes, Config.Production.CertificatePassword, Config.Production.PaymentRefundURL, Config.Production.PayeeAlias);
+                result = client.Refund(id, (double)a, "Återköp", Config.Test.RefundCallbackURL);
             }
-
-            
 
             return View();
         }
@@ -158,7 +155,7 @@ namespace TaBetaltMedSwish.Controllers
 
             logger.Debug("/Test/Callback > json: " + json);
 
-            SwishCheckPaymentRequestStatusResponse resultObject = JsonConvert.DeserializeObject<SwishCheckPaymentRequestStatusResponse>(json);
+            SwishApi.Models.CheckPaymentRequestStatusResponse resultObject = JsonConvert.DeserializeObject<SwishApi.Models.CheckPaymentRequestStatusResponse>(json);
 
             switch (resultObject.status)
             {
@@ -196,7 +193,7 @@ namespace TaBetaltMedSwish.Controllers
 
             logger.Debug("/Test/RefundCallback > json: " + json);
 
-            SwishRefundSatusCheckResponse resultObject = JsonConvert.DeserializeObject<SwishRefundSatusCheckResponse>(json);
+            SwishApi.Models.CheckRefundStatusResponse resultObject = JsonConvert.DeserializeObject<SwishApi.Models.CheckRefundStatusResponse>(json);
 
             switch (resultObject.status)
             {

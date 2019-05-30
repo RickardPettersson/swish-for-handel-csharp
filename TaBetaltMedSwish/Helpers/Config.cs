@@ -113,6 +113,20 @@ namespace TaBetaltMedSwish.Helpers
                     }
                 }
             }
+            public static string PayeePaymentReference
+            {
+                get
+                {
+                    if (System.Configuration.ConfigurationManager.AppSettings.AllKeys.Contains("test_payeePaymentReference"))
+                    {
+                        return System.Configuration.ConfigurationManager.AppSettings["test_payeePaymentReference"];
+                    }
+                    else
+                    {
+                        return "";
+                    }
+                }
+            }
             public static string CallbackURL
             {
                 get
@@ -208,6 +222,20 @@ namespace TaBetaltMedSwish.Helpers
                     if (System.Configuration.ConfigurationManager.AppSettings.AllKeys.Contains("production_payeeAlias"))
                     {
                         return System.Configuration.ConfigurationManager.AppSettings["production_payeeAlias"];
+                    }
+                    else
+                    {
+                        return "";
+                    }
+                }
+            }
+            public static string PayeePaymentReference
+            {
+                get
+                {
+                    if (System.Configuration.ConfigurationManager.AppSettings.AllKeys.Contains("production_payeePaymentReference"))
+                    {
+                        return System.Configuration.ConfigurationManager.AppSettings["production_payeePaymentReference"];
                     }
                     else
                     {
